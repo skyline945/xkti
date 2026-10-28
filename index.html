@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XKTI · 信科人格趣味测试</title>
+<style>
+  :root {
+    --bg1: #fff7ed;
+    --bg2: #fdf2f8;
+    --ink: #3f3d56;
+    --ink-soft: #6f6c8f;
+    --accent: #ff7a59;
+    --accent2: #5b8cff;
+    --accent3: #ffcb47;
+    --card: #ffffff;
+    --shadow: 0 12px 32px rgba(63, 61, 86, .12);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body { height: 100%; }
+
+  body {
+    font-family: "MiSans", "HarmonyOS Sans SC", "OPPO Sans", "PingFang SC", "Source Han Sans SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+    color: var(--ink);
+    background: linear-gradient(135deg, var(--bg1), var(--bg2) 55%, #eef4ff);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ---------- 漂浮背景装饰 ---------- */
+  .floaties {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden;
+  }
+  .floaty {
+    position: absolute;
+    font-size: 2rem;
+    opacity: .5;
+    animation: drift linear infinite;
+    will-change: transform;
+  }
+  @keyframes drift {
+    0%   { transform: translateY(110vh) rotate(0deg); }
+    100% { transform: translateY(-15vh) rotate(360deg); }
+  }
+  /* 用径向渐变模拟模糊光斑：效果几乎相同，但不用实时计算高斯模糊 */
+  .blob {
+    position: fixed; border-radius: 50%; z-index: 0; pointer-events: none;
+    animation: blobMove 14s ease-in-out infinite alternate;
+    will-change: transform;
+  }
+  .blob.b1 { width: 56vmax; height: 56vmax; top: -20vmax; left: -16vmax;
+    background: radial-gradient(circle, rgba(255, 214, 165, .55) 0%, rgba(255, 214, 165, 0) 62%); }
+  .blob.b2 { width: 50vmax; height: 50vmax; bottom: -20vmax; right: -14vmax; animation-delay: -5s;
+    background: radial-gradient(circle, rgba(189, 178, 255, .5) 0%, rgba(189, 178, 255, 0) 62%); }
+  .blob.b3 { width: 36vmax; height: 36vmax; top: 36%; left: 56%; animation-delay: -9s;
+    background: radial-gradient(circle, rgba(155, 246, 255, .45) 0%, rgba(155, 246, 255, 0) 62%); }
+  @keyframes blobMove {
+    from { transform: translate(0, 0) scale(1); }
+    to   { transform: translate(6vmax, -4vmax) scale(1.12); }
+  }
+  /* 蓝图点阵底纹（信科主题） */
+  .grid-bg {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background-image: radial-gradient(rgba(91, 140, 255, .09) 1.1px, transparent 1.1px);
+    background-size: 24px 24px;
+  }
+  /* 星星微光 */
+  .spark {
+    position: absolute; z-index: 0; pointer-events: none;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 0 8px rgba(255, 203, 71, .9);
+    animation: twinkle ease-in-out infinite;
+    will-change: opacity, transform;
+  }
+  @keyframes twinkle {
+    0%, 100% { opacity: .15; transform: scale(.55); }
+    50%      { opacity: .95; transform: scale(1); }
+  }
+
+  /* ---------- 屏幕切换 ---------- */
+  .screen {
+    position: relative; z-index: 1;
+    min-height: 100vh;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 4vh 20px;
+  }
+  .screen.active { display: flex; }
+  .screen.entering > * { animation: popIn .55s cubic-bezier(.34, 1.56, .64, 1) both; }
+  @keyframes popIn {
+    from { opacity: 0; transform: translateY(28px) scale(.96); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* ---------- 开始页 ---------- */
+  .hero { text-align: center; max-width: 640px; }
+  .hero .badge {
+    display: inline-block;
+    background: var(--card);
+    border: 2px solid #ffd0bf;
+    color: var(--accent);
+    padding: 6px 18px;
+    border-radius: 999px;
+    font-size: .95rem;
+    letter-spacing: .2em;
+    box-shadow: var(--shadow);
+    animation: wobble 3s ease-in-out infinite;
+  }
+  @keyframes wobble {
+    0%, 100% { transform: rotate(-2deg); }
+    50%      { transform: rotate(2deg) translateY(-4px); }
+  }
+  .hero h1 {
+    font-size: clamp(3rem, 10vw, 5.2rem);
+    margin: 22px 0 6px;
+    letter-spacing: .08em;
+    background-image: linear-gradient(120deg, var(--accent), #ff4d8d 40%, var(--accent2) 75%, var(--accent));
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: shimmer 6s ease-in-out infinite;
+  }
+  @keyframes shimmer {
+    0%, 100% { background-position: 0% 50%; }
+    50%      { background-position: 100% 50%; }
+  }
+  .hero p.sub { color: var(--ink-soft); font-size: 1.12rem; line-height: 1.9; margin-bottom: 34px; }
+  .hero p.sub b { color: var(--accent); }
+
+  .btn {
+    font-family: inherit;
+    cursor: pointer;
+    border: none;
+    border-radius: 999px;
+    padding: 16px 52px;
+    font-size: 1.25rem;
+    letter-spacing: .15em;
+    color: #fff;
+    background: linear-gradient(120deg, var(--accent), #ff4d8d);
+    box-shadow: 0 10px 24px rgba(255, 122, 89, .4);
+    transition: transform .18s cubic-bezier(.34, 1.56, .64, 1), box-shadow .18s;
+  }
+  .btn:hover { transform: translateY(-4px) scale(1.04); box-shadow: 0 16px 32px rgba(255, 122, 89, .5); }
+  .btn:active { transform: scale(.96); }
+  .btn.ghost {
+    background: #fff;
+    color: var(--ink-soft);
+    box-shadow: var(--shadow);
+    font-size: 1rem;
+    padding: 12px 36px;
+  }
+
+  .hero .hint { margin-top: 22px; color: #b3aec9; font-size: .9rem; }
+
+  /* ---------- 答题页 ---------- */
+  .quiz-wrap { width: 100%; max-width: 720px; }
+
+  .progress-area { margin-bottom: 26px; }
+  .progress-meta {
+    display: flex; justify-content: space-between; align-items: baseline;
+    color: var(--ink-soft); font-size: .95rem; margin-bottom: 8px; padding: 0 4px;
+  }
+  .progress-meta .qnum { font-size: 1.25rem; color: var(--accent); }
+  .progress-track {
+    height: 14px; background: rgba(255,255,255,.8); border-radius: 999px;
+    box-shadow: inset 0 2px 6px rgba(63,61,86,.08); overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; width: 0;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--accent3), var(--accent), #ff4d8d);
+    transition: width .5s cubic-bezier(.34, 1.3, .64, 1);
+    position: relative;
+  }
+  .progress-fill::after {
+    content: "🚀";
+    position: absolute; right: -4px; top: 50%;
+    transform: translateY(-54%);
+    font-size: .9rem;
+  }
+
+  .qcard {
+    background: var(--card);
+    border-radius: 28px;
+    box-shadow: var(--shadow);
+    padding: clamp(24px, 4vw, 40px);
+    position: relative;
+    overflow: hidden;
+  }
+  .qcard::before {
+    content: "";
+    position: absolute; inset: 0 0 auto 0; height: 7px;
+    background: linear-gradient(90deg, var(--accent2), #8f6bff, var(--accent));
+  }
+  .qcard.slide-in  { animation: qIn .45s cubic-bezier(.34, 1.4, .64, 1) both; }
+  .qcard.slide-out { animation: qOut .25s ease-in both; }
+  @keyframes qIn {
+    from { opacity: 0; transform: translateX(60px) rotate(1.5deg); }
+    to   { opacity: 1; transform: translateX(0) rotate(0); }
+  }
+  @keyframes qOut {
+    to { opacity: 0; transform: translateX(-60px) rotate(-1.5deg); }
+  }
+
+  .qtitle {
+    font-size: clamp(1.15rem, 3.4vw, 1.45rem);
+    line-height: 1.75;
+    margin-bottom: 26px;
+  }
+  .qtitle .qtag {
+    display: inline-block;
+    background: linear-gradient(120deg, var(--accent2), #8f6bff);
+    color: #fff;
+    border-radius: 10px;
+    padding: 2px 12px;
+    font-size: .85em;
+    margin-right: 10px;
+    vertical-align: 2px;
+  }
+
+  .options { display: grid; gap: 14px; }
+  .opt {
+    display: flex; align-items: flex-start; gap: 14px;
+    text-align: left;
+    font-family: inherit;
+    font-size: 1.02rem;
+    line-height: 1.7;
+    color: var(--ink);
+    background: #fbf9ff;
+    border: 2px solid #eceafc;
+    border-radius: 18px;
+    padding: 15px 18px;
+    cursor: pointer;
+    transition: transform .16s cubic-bezier(.34,1.56,.64,1), border-color .16s, background .16s, box-shadow .16s;
+    animation: optIn .4s cubic-bezier(.34, 1.4, .64, 1) both;
+  }
+  .opt:nth-child(1) { animation-delay: .05s; }
+  .opt:nth-child(2) { animation-delay: .12s; }
+  .opt:nth-child(3) { animation-delay: .19s; }
+  .opt:nth-child(4) { animation-delay: .26s; }
+  @keyframes optIn {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  /* hover 高亮只在有真实指针的设备上启用，避免移动端“粘性 hover”
+     让新题目同一位置的选项看起来已被选中 */
+  @media (hover: hover) and (pointer: fine) {
+    .opt:hover {
+      transform: translateX(6px) scale(1.01);
+      border-color: var(--accent);
+      background: #fff6f2;
+      box-shadow: 0 8px 18px rgba(255, 122, 89, .18);
+    }
+    .opt:hover .letter { transform: rotate(-8deg) scale(1.12); }
+  }
+  .opt .letter {
+    flex: none;
+    width: 34px; height: 34px;
+    border-radius: 12px;
+    display: grid; place-items: center;
+    font-size: 1.05rem;
+    color: #fff;
+    background: linear-gradient(135deg, var(--accent2), #8f6bff);
+    transition: transform .2s;
+  }
+  .opt:nth-child(2) .letter { background: linear-gradient(135deg, #ff9f43, #ff6b9d); }
+  .opt:nth-child(3) .letter { background: linear-gradient(135deg, #2ecc8f, #4fc3f7); }
+  .opt:nth-child(4) .letter { background: linear-gradient(135deg, #ff6b9d, #c44dff); }
+  .opt.picked {
+    border-color: var(--accent);
+    background: linear-gradient(120deg, #fff1ea, #ffeef5);
+    animation: pickedPulse .35s cubic-bezier(.34,1.56,.64,1) both;
+  }
+  @keyframes pickedPulse {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.035); }
+    100% { transform: scale(1.01); }
+  }
+
+  /* ---------- 分析过渡 ---------- */
+  .analyzing { text-align: center; }
+  .analyzing .gear { font-size: 4rem; display: inline-block; animation: spinBounce 1.4s ease-in-out infinite; }
+  @keyframes spinBounce {
+    0% { transform: rotate(0) scale(1); }
+    50% { transform: rotate(180deg) scale(1.2); }
+    100% { transform: rotate(360deg) scale(1); }
+  }
+  .analyzing p { margin-top: 18px; color: var(--ink-soft); font-size: 1.1rem; letter-spacing: .1em; }
+  .analyzing .dots::after { content: ""; animation: dots 1.2s steps(4) infinite; }
+  @keyframes dots { 0% {content:"";} 25% {content:".";} 50% {content:"..";} 75% {content:"...";} }
+
+  /* ---------- 结果页 ---------- */
+  .result-wrap { width: 100%; max-width: 760px; }
+  .result-card {
+    background: var(--card);
+    border-radius: 32px;
+    box-shadow: var(--shadow);
+    padding: clamp(28px, 5vw, 48px);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .result-card::before {
+    content: "";
+    position: absolute; inset: 0 0 auto 0; height: 8px;
+    background: linear-gradient(90deg, var(--accent3), var(--accent), #ff4d8d, var(--accent2));
+  }
+  .result-label { color: var(--ink-soft); letter-spacing: .3em; font-size: .95rem; margin-top: 8px; }
+
+  .art-box {
+    margin: 22px auto 8px;
+    width: clamp(190px, 44vw, 280px);
+    height: clamp(190px, 44vw, 280px);
+    border-radius: 50%;
+    display: grid; place-items: center;
+    background: radial-gradient(circle at 50% 32%, #ffffff, #fdf0ee);
+    box-shadow: 0 0 0 4px var(--ring, #ffd9c9), 0 16px 36px rgba(63,61,86,.16);
+    position: relative;
+  }
+  .art-badge {
+    width: 82%; height: 82%;
+    display: block;
+    object-fit: contain;
+    filter: drop-shadow(0 8px 14px rgba(63,61,86,.22));
+    animation: artFloat 3.2s ease-in-out infinite;
+  }
+  .art-emoji {
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    display: grid; place-items: center;
+    font-size: clamp(5rem, 16vw, 7.5rem);
+    background: linear-gradient(135deg, var(--c1), var(--c2));
+    box-shadow: inset 0 -10px 30px rgba(255,255,255,.25), 0 16px 36px rgba(63,61,86,.2);
+    animation: artFloat 3.2s ease-in-out infinite;
+  }
+  @keyframes artFloat {
+    0%, 100% { transform: translateY(0) rotate(-1.5deg); }
+    50%      { transform: translateY(-10px) rotate(1.5deg); }
+  }
+
+  .rname {
+    font-size: clamp(1.7rem, 5vw, 2.3rem);
+    margin: 12px 0 6px;
+    letter-spacing: .06em;
+  }
+  .rtraits {
+    display: inline-flex; gap: 8px; flex-wrap: wrap; justify-content: center;
+    margin: 0 0 20px;
+  }
+  .rtraits span {
+    background: #f4f1ff;
+    color: var(--accent2);
+    border: 1.5px solid #e2dcff;
+    border-radius: 999px;
+    padding: 4px 14px;
+    font-size: .92rem;
+  }
+
+  .desc {
+    text-align: left;
+    color: #55516e;
+    font-size: .98rem;
+    line-height: 2;
+    margin: 0 auto 28px;
+    max-width: 620px;
+  }
+  .desc p {
+    text-indent: 0;
+    text-align: center;
+    background: linear-gradient(120deg, #fff6ec, #fff0f6);
+    border-left: 4px solid var(--accent);
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin-bottom: 0;
+  }
+
+  .dims { display: grid; gap: 18px; margin: 0 auto 30px; max-width: 620px; text-align: left; }
+  .dim-head {
+    display: flex; justify-content: space-between;
+    font-size: .92rem; color: var(--ink-soft); margin-bottom: 6px;
+  }
+  .dim-head .win { color: var(--accent); }
+  .dim-track {
+    position: relative; height: 16px; border-radius: 999px;
+    background: linear-gradient(90deg, #ffe3d6, #eef0ff);
+    box-shadow: inset 0 2px 5px rgba(63,61,86,.08);
+  }
+  .dim-marker {
+    position: absolute; top: 50%; left: 50%;
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: #fff;
+    border: 4px solid var(--accent2);
+    transform: translate(-50%, -50%);
+    box-shadow: 0 4px 10px rgba(63,61,86,.25);
+    transition: left 1.1s cubic-bezier(.34, 1.3, .64, 1);
+  }
+  .dim-marker::after {
+    content: "";
+    position: absolute; inset: 4px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent3), var(--accent));
+  }
+  /* 隐藏人格的「运气值」进度条（金色，拉满） */
+  .luck-row { margin-top: 6px; }
+  .luck-row .luck-head .win { color: #f7a600; }
+  .luck-row .luck-track { background: linear-gradient(90deg, #fff3d6, #ffe9b0); }
+  .luck-row .luck-marker { border-color: #f7a600; }
+  .luck-row .luck-marker::after { background: linear-gradient(135deg, #ffd34d, #ff9f43); }
+
+  .result-actions { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+
+  /* ---------- 结果海报弹层 ---------- */
+  .poster-overlay {
+    position: fixed; inset: 0; z-index: 100;
+    background: rgba(43, 40, 66, .72);
+    display: none;
+    align-items: center; justify-content: center;
+    flex-direction: column;
+    padding: 20px;
+    backdrop-filter: blur(4px);
+  }
+  .poster-overlay.show { display: flex; }
+  #poster-holder img, #poster-holder canvas {
+    max-width: min(92vw, 420px);
+    max-height: 76vh;
+    width: auto; height: auto;
+    border-radius: 18px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, .45);
+    animation: popIn .4s cubic-bezier(.34, 1.56, .64, 1) both;
+  }
+  .poster-tip { color: #fff; margin-top: 16px; font-size: .95rem; opacity: .9; letter-spacing: .08em; }
+
+  /* ---------- 撒花 ---------- */
+  .confetti {
+    position: fixed; top: -20px; z-index: 50; pointer-events: none;
+    animation: confettiFall linear forwards;
+  }
+  @keyframes confettiFall {
+    to { transform: translateY(110vh) rotate(720deg); opacity: .2; }
+  }
+
+  @media (max-width: 520px) {
+    .opt { font-size: .95rem; }
+    .btn { padding: 14px 42px; font-size: 1.1rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="grid-bg"></div>
+<div class="blob b1"></div>
+<div class="blob b2"></div>
+<div class="blob b3"></div>
+<div class="floaties" id="floaties"></div>
+
+<!-- 开始页 -->
+<section class="screen active" id="screen-start">
+  <div class="hero">
+    <span class="badge">信 科 人 格 测 试</span>
+    <h1>XKTI</h1>
+    <p class="sub">九道小题，三个维度<br>测测你这一世是哪种「信科人格」✨</p>
+    <button class="btn" id="btn-start">开始测试</button>
+    <p class="hint">凭第一直觉作答，结果会更准哦</p>
+  </div>
+</section>
+
+<!-- 答题页 -->
+<section class="screen" id="screen-quiz">
+  <div class="quiz-wrap">
+    <div class="progress-area">
+      <div class="progress-meta">
+        <span class="qnum" id="q-num">第 1 / 9 题</span>
+        <span id="q-dim-hint"></span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+    </div>
+    <div class="qcard" id="qcard">
+      <div class="qtitle" id="q-title"></div>
+      <div class="options" id="q-options"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 分析过渡 -->
+<section class="screen" id="screen-loading">
+  <div class="analyzing">
+    <span class="gear">⚙️</span>
+    <p>正在演算你的人格坐标<span class="dots"></span></p>
+  </div>
+</section>
+
+<!-- 结果页 -->
+<section class="screen" id="screen-result">
+  <div class="result-wrap">
+    <div class="result-card">
+      <p class="result-label" id="result-label">你的信科人格是</p>
+      <div class="art-box" id="art-box"></div>
+      <h2 class="rname" id="r-name"></h2>
+      <div class="rtraits" id="r-traits"></div>
+      <div class="desc" id="r-desc"></div>
+      <div class="dims" id="r-dims"></div>
+      <div class="result-actions">
+        <button class="btn" id="btn-save">保存结果图</button>
+        <button class="btn ghost" id="btn-restart">再测一次</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 结果海报弹层 -->
+<div class="poster-overlay" id="poster-overlay">
+  <div id="poster-holder"></div>
+  <p class="poster-tip">长按图片即可保存 · 点击空白处关闭</p>
+</div>
+
+<script>
+/* ============================================================
+ * 数据区
+ * 三个维度，各被奇数（5）道题覆盖，保证无平局：
+ *   d0 内向(intro) | 外向(extro)
+ *   d1 随缘(unplan) | 计划(plan)     ← 文档中「无计划 / 随缘」
+ *   d2 摆(bai) | 卷(juan)
+ * 每个选项对若干维度 +1。
+ * ============================================================ */
+
+const DIMS = [
+  { left: "静水流深", right: "海纳百川", leftKey: "intro", rightKey: "extro" },
+  { left: "随遇而安", right: "未雨绸缪", leftKey: "unplan", rightKey: "plan" },
+  { left: "闲云野鹤", right: "焚膏继晷", leftKey: "bai",   rightKey: "juan" }
+];
+
+const QUESTIONS = [
+  {
+    title: "上一世就饱受理科一号楼迷宫折磨的你，去见这一世的新生导师，发现自己仍然迷路了，这时你会：",
+    options: [
+      { text: "发微信给导师，礼貌询问 Ta 办公室应该怎么走并记录下来，以后再来时就能轻松找到了", d: { extro: 1, plan: 1 } },
+      { text: "询问路过的老师你应该怎么走，只求这次尽快找到路", d: { extro: 1, unplan: 1 } },
+      { text: "先前往电梯厅看地图，搞明白地图结构后再出发寻找办公室", d: { intro: 1, plan: 1 } },
+      { text: "根据面前的指示牌走，多转几圈总能找到", d: { intro: 1, unplan: 1 } }
+    ]
+  },
+  {
+    title: "你坐在高数线代／数分高代的课堂里，发现一个上一世没听说过的定理，有点感兴趣但老师未加展开，这时你会：",
+    options: [
+      { text: "先好好听课，把这个题加到 todo list 中", d: { plan: 1, juan: 1 } },
+      { text: "先把必要的课程内容学会，这个问题以后有空时再想", d: { unplan: 1, juan: 1 } },
+      { text: "这个内容不在考试范围内，如果花时间钻研可能会打乱我原本的学习安排，先不管了", d: { plan: 1, bai: 1 } },
+      { text: "想了一下发现不太会，算了不想了", d: { unplan: 1, bai: 1 } }
+    ]
+  },
+  {
+    title: "你在计算概论课程上重学 C++，仍然碰到自己不理解的语法，不知道怎么用时，你会：",
+    options: [
+      { text: "询问助教在哪里可以找到相关文档，认真阅读文档来了解这个语法，了解完再用到作业中去", d: { extro: 1, juan: 1 } },
+      { text: "让 AI 总结这个语法的各种应用场景，学习后再写代码", d: { intro: 1, juan: 1 } },
+      { text: "把作业题给有 C++ 基础的好友，让 Ta 写一份代码发过来，再对照写一份", d: { extro: 1, bai: 1 } },
+      { text: "直接让 AI 生成一段代码交上去，赶紧写完作业最重要", d: { intro: 1, bai: 1 } }
+    ]
+  },
+  {
+    title: "你决定这一世要好好规划本科生活、争取保研资格，找教务了解转段政策，却得到「暂时不能给你明确的答复」，这时你会：",
+    options: [
+      { text: "要学什么我自己衡量，感兴趣的多学点，不感兴趣就少学点，希望找到适合自己的研究方向", d: { unplan: 1, juan: 1 } },
+      { text: "自己衡量什么的有点累，我就随缘上上课，保证不挂科就好了", d: { unplan: 1, bai: 1 } },
+      { text: "从各个渠道搜集信息，制定一个多方面发展的学习计划，保证自己在各种情况下综合素质都过硬", d: { plan: 1, juan: 1 } },
+      { text: "既然没法确定努力方向，不如先让自己的生活更精彩些，多安排一些课余活动，做做学工看看电影", d: { plan: 1, bai: 1 } }
+    ]
+  },
+  {
+    title: "你写计算概论作业，明明是做过的题，样例通过却满屏 Wrong Answer，这时你会：",
+    options: [
+      { text: "询问同学调试的方法有哪些，自己多设计几个样例来测试", d: { extro: 1, juan: 1 } },
+      { text: "把代码喂给 AI，让它给出错误和错误原因", d: { intro: 1, juan: 1 } },
+      { text: "让朋友把 Ta 的正确代码发过来，对照着看哪里不一样", d: { extro: 1, bai: 1 } },
+      { text: "调不出来不调了，直接让 AI 生成一份作业代码交上去", d: { intro: 1, bai: 1 } }
+    ]
+  },
+  {
+    title: "好友邀请你周末一起讨论这周新学的内容，在交流中加深印象、巩固知识时，你心里想：",
+    options: [
+      { text: "太好了！我正想跟朋友们多聊聊，复习知识的同时增进感情", d: { extro: 1, unplan: 1 } },
+      { text: "和别人讨论进度不太可控，我还是想自己安静地复习", d: { intro: 1, plan: 1 } },
+      { text: "不去了，周末已经安排了和室友出去玩，学习之余也要多享受享受生活！", d: { extro: 1, plan: 1 } },
+      { text: "有点社恐，我还是在寝室里偷偷摆一会吧", d: { intro: 1, unplan: 1 } }
+    ]
+  },
+  {
+    title: "习题课上，助教引入了一个你从未听说的知识点，此时你会：",
+    options: [
+      { text: "积极和助教讨论这一知识点的使用场景", d: { extro: 1 } },
+      { text: "默默搜索有关这个知识点的资料，略作了解", d: { intro: 1 } }
+    ]
+  },
+  {
+    title: "这一世你要提高生活质量，保证学习之余也想多度过一些快乐的时光，所以你：",
+    options: [
+      { text: "提前规划好自己一周的学习时间和放松娱乐时间", d: { plan: 1 } },
+      { text: "什么时候玩或学全凭兴致，既可能泡一天图书馆，也可能在心血来潮时约人去玩", d: { unplan: 1 } }
+    ]
+  },
+  {
+    title: "这一世，去二教上课就像开盲盒，永远不知道会发生什么神奇事件，所以你：",
+    options: [
+      { text: "二教，知道了一些事情，已翘", d: { bai: 1 } },
+      { text: "坚持在二教上课，上课很重要", d: { juan: 1 } }
+    ]
+  }
+];
+
+/* 八种人格，按文档顺序。
+ * extro/plan/juan 为该维度获胜的一极（true 表示外向/计划/卷）。 */
+const RESULTS = [
+  { name: "服务器人格",   icon: "🖥️", badge: "images/badges/badge-server.png", color: ["#4a6fa5", "#7f9bc4"], extro: true,  plan: true,  juan: true,
+    desc: "乐于助人的超级学霸，不仅自己学得好，还愿意帮助同学一起学" },
+  { name: "路由器人格",   icon: "📡", badge: "images/badges/badge-router.png", color: ["#2f9e8f", "#5bc0b0"], extro: true,  plan: true,  juan: false,
+    desc: "每天都在链接同学——你们是不是也想跟我出去玩呀？" },
+  { name: "脉冲广播人格", icon: "📻", badge: "images/badges/badge-pulse.png", color: ["#7c5cbf", "#a58bd6"], extro: true,  plan: false, juan: true,
+    desc: "总是间断广播自己要好好学习，波形极不稳定" },
+  { name: "贪心算法人格", icon: "🎲", badge: "images/badges/badge-greedy.png", color: ["#f0863a", "#f6b06a"], extro: true,  plan: false, juan: false,
+    desc: "只要今天玩的开心就够啦！" },
+  { name: "显卡人格",     icon: "🎮", badge: "images/badges/badge-gpu.png", color: ["#3f9e4f", "#6ccf7a"], extro: false, plan: true,  juan: true,
+    desc: "算力惊人、能量巨大，积攒的能力等待着考试的那一天爆发！" },
+  { name: "电容人格",     icon: "🔋", badge: "images/badges/badge-capacitor.png", color: ["#d4a017", "#e6c65c"], extro: false, plan: true,  juan: false,
+    desc: "时刻积攒着自己社交和学习的能量" },
+  { name: "二极管人格",   icon: "💡", badge: "images/badges/badge-diode.png", color: ["#d9534f", "#e88984"], extro: false, plan: false, juan: true,
+    desc: "平时不动声色，但题目难度大于击穿电压之后会变得非常厉害！" },
+  { name: "深度求索人格", icon: "🐋", badge: "images/badges/badge-fish.png", color: ["#3a7bd5", "#6fa8e0"], extro: false, plan: false, juan: false,
+    desc: "白饭真好吃阿巴阿巴，深度思考中……" }
+];
+
+/* 隐藏人格「攻城狮」（工程师谐音梗）：每次测试 1/50 概率触发 */
+const HIDDEN_RESULT = {
+  name: "攻城狮人格",
+  icon: "🦁",
+  badge: "images/badges/badge-engineer.png",
+  color: ["#f7b500", "#ff9f43"],
+  hidden: true,
+  desc: "恭喜你抽到了隐藏人格，你就是今天大信科天选之子！"
+};
+
+/* ============================================================
+ * 逻辑区
+ * ============================================================ */
+
+const LETTERS = ["A", "B", "C", "D"];
+let current = 0;
+let scores = { intro: 0, extro: 0, plan: 0, unplan: 0, juan: 0, bai: 0 };
+let locked = false;
+let lastResult = null;
+
+const $ = id => document.getElementById(id);
+
+function switchScreen(id) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active", "entering"));
+  const el = $(id);
+  el.classList.add("active");
+  void el.offsetWidth; // 重启动画
+  el.classList.add("entering");
+  window.scrollTo({ top: 0 });
+}
+
+function renderQuestion() {
+  const q = QUESTIONS[current];
+  $("q-num").textContent = `第 ${current + 1} / ${QUESTIONS.length} 题`;
+  $("progress-fill").style.width = (current / QUESTIONS.length) * 100 + "%";
+  $("q-title").innerHTML = `<span class="qtag">Q${current + 1}</span>${q.title}`;
+
+  const box = $("q-options");
+  box.innerHTML = "";
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement("button");
+    btn.className = "opt";
+    btn.innerHTML = `<span class="letter">${LETTERS[i]}</span><span>${opt.text}</span>`;
+    btn.addEventListener("click", () => pick(i, btn));
+    box.appendChild(btn);
+  });
+
+  const card = $("qcard");
+  card.classList.remove("slide-out");
+  card.classList.add("slide-in");
+}
+
+function pick(i, btn) {
+  if (locked) return;
+  locked = true;
+  btn.classList.add("picked");
+
+  const d = QUESTIONS[current].options[i].d;
+  for (const k in d) scores[k] += d[k];
+
+  $("progress-fill").style.width = ((current + 1) / QUESTIONS.length) * 100 + "%";
+
+  setTimeout(() => {
+    const card = $("qcard");
+    card.classList.remove("slide-in");
+    card.classList.add("slide-out");
+    setTimeout(() => {
+      current++;
+      locked = false;
+      if (current < QUESTIONS.length) {
+        renderQuestion();
+      } else {
+        showLoading();
+      }
+    }, 240);
+  }, 320);
+}
+
+function showLoading() {
+  switchScreen("screen-loading");
+  setTimeout(showResult, 1400);
+}
+
+function computeResult() {
+  // 每次测试 1/50 概率触发隐藏人格「攻城狮」
+  if (Math.random() < 1 / 50) return HIDDEN_RESULT;
+
+  const extro = scores.extro > scores.intro;
+  const plan = scores.plan > scores.unplan;
+  const juan = scores.juan > scores.bai;
+  return RESULTS.find(r => r.extro === extro && r.plan === plan && r.juan === juan);
+}
+
+function traitsOf(r) {
+  const a = r.extro ? "海纳百川" : "静水流深";
+  const b = r.plan ? "未雨绸缪" : "随遇而安";
+  const c = r.juan ? "焚膏继晷" : "闲云野鹤";
+  return [a, b, c];
+}
+
+function showResult() {
+  const r = computeResult();
+  lastResult = r;
+
+  // 结果标签
+  $("result-label").textContent = r.hidden ? "✨ 隐藏人格解锁 ✨" : "你的信科人格是";
+
+  // 人格徽章：高清图片 + Emoji 兜底
+  const artBox = $("art-box");
+  artBox.innerHTML = "";
+  artBox.style.setProperty("--ring", r.color[0]);
+  const img = document.createElement("img");
+  img.className = "art-badge";
+  img.src = r.badge;
+  img.alt = r.name;
+  img.onerror = () => {
+    const em = document.createElement("div");
+    em.className = "art-emoji";
+    em.textContent = r.icon;
+    em.style.setProperty("--c1", r.color[0]);
+    em.style.setProperty("--c2", r.color[1]);
+    artBox.innerHTML = "";
+    artBox.appendChild(em);
+  };
+  artBox.appendChild(img);
+
+  $("r-name").textContent = r.name;
+
+  const traits = $("r-traits");
+  traits.innerHTML = "";
+  const tags = r.hidden ? ["隐藏款", "天选之子"] : traitsOf(r);
+  tags.forEach(t => {
+    const s = document.createElement("span");
+    s.textContent = t;
+    traits.appendChild(s);
+  });
+
+  const desc = $("r-desc");
+  desc.innerHTML = "";
+  const p = document.createElement("p");
+  p.textContent = r.desc;
+  desc.appendChild(p);
+
+  // 维度条
+  const dims = $("r-dims");
+  dims.innerHTML = "";
+  DIMS.forEach((dim) => {
+    const leftCount = scores[dim.leftKey];
+    const rightCount = scores[dim.rightKey];
+    const total = leftCount + rightCount || 1;
+    const rightWins = rightCount >= leftCount;
+    const row = document.createElement("div");
+    row.innerHTML = `
+      <div class="dim-head">
+        <span class="${rightWins ? "" : "win"}">${dim.left} ${leftCount}</span>
+        <span class="${rightWins ? "win" : ""}">${rightCount} ${dim.right}</span>
+      </div>
+      <div class="dim-track"><div class="dim-marker"></div></div>`;
+    dims.appendChild(row);
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      row.querySelector(".dim-marker").style.left = `calc(${(rightCount / total * 100)}% )`;
+    }));
+  });
+
+  // 隐藏人格额外加一条「运气值」，拉满
+  if (r.hidden) {
+    const row = document.createElement("div");
+    row.className = "luck-row";
+    row.innerHTML = `
+      <div class="dim-head luck-head">
+        <span>运气值</span>
+        <span class="win">MAX · 拉满</span>
+      </div>
+      <div class="dim-track luck-track"><div class="dim-marker luck-marker"></div></div>`;
+    dims.appendChild(row);
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      row.querySelector(".dim-marker").style.left = "100%";
+    }));
+  }
+
+  switchScreen("screen-result");
+  launchConfetti();
+}
+
+function launchConfetti() {
+  const shapes = ["🎉", "✨", "🎈", "⭐", "🌸", "💫"];
+  for (let i = 0; i < 36; i++) {
+    const c = document.createElement("span");
+    c.className = "confetti";
+    c.textContent = shapes[Math.floor(Math.random() * shapes.length)];
+    c.style.left = Math.random() * 100 + "vw";
+    c.style.fontSize = (0.9 + Math.random() * 1.3) + "rem";
+    c.style.animationDuration = (2.2 + Math.random() * 2.2) + "s";
+    c.style.animationDelay = (Math.random() * 0.8) + "s";
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 5200);
+  }
+}
+
+function restart() {
+  current = 0;
+  scores = { intro: 0, extro: 0, plan: 0, unplan: 0, juan: 0, bai: 0 };
+  locked = false;
+  switchScreen("screen-start");
+}
+
+/* 背景漂浮小图标 */
+(function makeFloaties() {
+  const icons = ["</>", "⚡", "💡", "🔧", "📟", "🧮", "⌨️", "🔌", "💾", "🖥️", "∑", "λ", "01", "🐛"];
+  const box = $("floaties");
+  const count = window.matchMedia("(max-width: 640px)").matches ? 7 : 14;
+  for (let i = 0; i < count; i++) {
+    const f = document.createElement("span");
+    f.className = "floaty";
+    f.textContent = icons[i % icons.length];
+    f.style.left = Math.random() * 96 + "vw";
+    f.style.fontSize = (1.1 + Math.random() * 1.6) + "rem";
+    f.style.animationDuration = (14 + Math.random() * 18) + "s";
+    f.style.animationDelay = (-Math.random() * 24) + "s";
+    box.appendChild(f);
+  }
+  // 星星微光
+  for (let i = 0; i < 8; i++) {
+    const s = document.createElement("span");
+    s.className = "spark";
+    const size = (3 + Math.random() * 4).toFixed(1);
+    s.style.width = size + "px";
+    s.style.height = size + "px";
+    s.style.left = Math.random() * 98 + "vw";
+    s.style.top = Math.random() * 96 + "vh";
+    s.style.animationDuration = (2.2 + Math.random() * 3.2).toFixed(1) + "s";
+    s.style.animationDelay = (-Math.random() * 5).toFixed(1) + "s";
+    box.appendChild(s);
+  }
+})();
+
+$("btn-start").addEventListener("click", () => {
+  switchScreen("screen-quiz");
+  renderQuestion();
+});
+$("btn-restart").addEventListener("click", restart);
+
+/* ============================================================
+ * 结果海报：Canvas 手绘结果图，长按保存
+ * ============================================================ */
+
+function wrapText(ctx, text, maxW) {
+  const lines = [];
+  let line = "";
+  for (const ch of text) {
+    if (line && ctx.measureText(line + ch).width > maxW) { lines.push(line); line = ch; }
+    else line += ch;
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+
+function roundRectPath(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+function loadImage(src) {
+  return new Promise(resolve => {
+    if (!src) return resolve(null);
+    const im = new Image();
+    im.onload = () => resolve(im);
+    im.onerror = () => resolve(null);
+    im.src = src;
+  });
+}
+
+function buildPoster(r, badgeImg) {
+  const W = 1080, PAD = 84, CW = W - PAD * 2;
+  const cv = document.createElement("canvas");
+  const ctx = cv.getContext("2d");
+  const F = {
+    head:  '30px "PingFang SC","Microsoft YaHei",sans-serif',
+    title: '64px "PingFang SC","Microsoft YaHei",sans-serif',
+    trait: '28px "PingFang SC","Microsoft YaHei",sans-serif',
+    body:  '30px "PingFang SC","Microsoft YaHei",sans-serif',
+    dim:   '26px "PingFang SC","Microsoft YaHei",sans-serif',
+    foot:  '25px "PingFang SC","Microsoft YaHei",sans-serif'
+  };
+  const LH = 52, CHAR = 400;
+
+  // 预排正文换行
+  ctx.font = F.body;
+  const descLines = wrapText(ctx, r.desc, CW - 64);
+  const descH = descLines.length * LH + 40;
+  const dimsCount = DIMS.length + (r.hidden ? 1 : 0);
+  const dimsH = dimsCount * 66;
+
+  cv.width = W;
+  cv.height = PAD + 74 + (CHAR + 40) + 130 + 60 + descH + 30 + dimsH + 46 + 60;
+
+  const bg = ctx.createLinearGradient(0, 0, W, cv.height);
+  bg.addColorStop(0, "#fff7ed");
+  bg.addColorStop(.55, "#fdf2f8");
+  bg.addColorStop(1, "#eef4ff");
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, cv.height);
+  const glow = (x, y, rad, color) => {
+    const g = ctx.createRadialGradient(x, y, 0, x, y, rad);
+    g.addColorStop(0, color);
+    g.addColorStop(1, "rgba(255,255,255,0)");
+    ctx.fillStyle = g;
+    ctx.fillRect(x - rad, y - rad, rad * 2, rad * 2);
+  };
+  glow(W * .12, cv.height * .07, 340, "rgba(255,214,165,.55)");
+  glow(W * .92, cv.height * .32, 300, "rgba(189,178,255,.5)");
+  glow(W * .12, cv.height * .78, 300, "rgba(155,246,255,.45)");
+
+  let y = PAD;
+  // 顶部标签
+  ctx.font = F.head;
+  ctx.fillStyle = "#8a86a3";
+  ctx.textAlign = "center";
+  ctx.fillText(r.hidden ? "我 抽 到 了 隐 藏 人 格" : "我 的 信 科 人 格 是", W / 2, y + 30);
+  y += 74;
+
+  // 圆形徽章底 + 徽章图片（保持比例，Emoji 兜底）
+  const cx = W / 2, cy = y + CHAR / 2, R = CHAR / 2;
+  const gArt = ctx.createRadialGradient(cx, cy - R * 0.2, 0, cx, cy, R);
+  gArt.addColorStop(0, "#ffffff");
+  gArt.addColorStop(1, "#fdf0ee");
+  ctx.beginPath();
+  ctx.arc(cx, cy, R, 0, Math.PI * 2);
+  ctx.fillStyle = gArt;
+  ctx.fill();
+  ctx.lineWidth = 6;
+  ctx.strokeStyle = r.color[0];
+  ctx.stroke();
+  if (badgeImg) {
+    const iw = badgeImg.width, ih = badgeImg.height;
+    const scale = Math.min((CHAR * 0.82) / iw, (CHAR * 0.82) / ih);
+    const dw = iw * scale, dh = ih * scale;
+    ctx.drawImage(badgeImg, cx - dw / 2, cy - dh / 2, dw, dh);
+  } else {
+    ctx.font = '180px "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif';
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(r.icon, cx, cy + 6);
+    ctx.textBaseline = "alphabetic";
+  }
+  y += CHAR + 40;
+
+  // 人格名称
+  ctx.font = F.title;
+  ctx.fillStyle = "#3f3d56";
+  ctx.textAlign = "center";
+  ctx.fillText(r.name, W / 2, y + 60);
+  y += 130;
+
+  // 三维标签
+  ctx.font = F.trait;
+  ctx.fillStyle = r.color[0];
+  ctx.fillText(r.hidden ? "隐藏款 · 天选之子" : traitsOf(r).join(" · "), W / 2, y);
+  y += 60;
+
+  // 描述（带底色卡片）
+  const boxH = descLines.length * LH + 40;
+  roundRectPath(ctx, PAD, y, CW, boxH, 18);
+  ctx.fillStyle = "#fff1f5";
+  ctx.fill();
+  roundRectPath(ctx, PAD, y, 10, boxH, 5);
+  ctx.fillStyle = r.color[0];
+  ctx.fill();
+  ctx.font = F.body;
+  ctx.fillStyle = "#55516e";
+  ctx.textAlign = "left";
+  descLines.forEach((ln, i) => ctx.fillText(ln, PAD + 36, y + 48 + i * LH));
+  y += boxH + 30;
+
+  // 维度条
+  ctx.font = F.dim;
+  DIMS.forEach((dim) => {
+    const leftCount = scores[dim.leftKey];
+    const rightCount = scores[dim.rightKey];
+    const total = leftCount + rightCount || 1;
+    const rightWins = rightCount >= leftCount;
+    ctx.textAlign = "left";
+    ctx.fillStyle = rightWins ? "#8a86a3" : r.color[0];
+    ctx.fillText(`${dim.left} ${leftCount}`, PAD, y + 26);
+    ctx.textAlign = "right";
+    ctx.fillStyle = rightWins ? r.color[0] : "#8a86a3";
+    ctx.fillText(`${rightCount} ${dim.right}`, PAD + CW, y + 26);
+    const ty = y + 40;
+    const g = ctx.createLinearGradient(PAD, 0, PAD + CW, 0);
+    g.addColorStop(0, "#ffe3d6");
+    g.addColorStop(1, "#eef0ff");
+    roundRectPath(ctx, PAD, ty, CW, 26, 13);
+    ctx.fillStyle = g;
+    ctx.fill();
+    const mx = PAD + CW * rightCount / total;
+    ctx.beginPath();
+    ctx.arc(mx, ty + 13, 17, 0, Math.PI * 2);
+    ctx.fillStyle = "#fff";
+    ctx.fill();
+    ctx.lineWidth = 6;
+    ctx.strokeStyle = r.color[0];
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(mx, ty + 13, 8, 0, Math.PI * 2);
+    ctx.fillStyle = r.color[0];
+    ctx.fill();
+    y += 66;
+  });
+  if (r.hidden) {
+    ctx.font = F.dim;
+    ctx.textAlign = "left";
+    ctx.fillStyle = "#8a86a3";
+    ctx.fillText("运气值", PAD, y + 26);
+    ctx.textAlign = "right";
+    ctx.fillStyle = "#f7a600";
+    ctx.fillText("MAX · 拉满", PAD + CW, y + 26);
+    const ty = y + 40;
+    const g = ctx.createLinearGradient(PAD, 0, PAD + CW, 0);
+    g.addColorStop(0, "#fff3d6");
+    g.addColorStop(1, "#ffe9b0");
+    roundRectPath(ctx, PAD, ty, CW, 26, 13);
+    ctx.fillStyle = g;
+    ctx.fill();
+    const mx = PAD + CW;
+    ctx.beginPath();
+    ctx.arc(mx, ty + 13, 17, 0, Math.PI * 2);
+    ctx.fillStyle = "#fff";
+    ctx.fill();
+    ctx.lineWidth = 6;
+    ctx.strokeStyle = "#f7a600";
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(mx, ty + 13, 8, 0, Math.PI * 2);
+    ctx.fillStyle = "#f7a600";
+    ctx.fill();
+    y += 66;
+  }
+  y += 46;
+
+  // 底部
+  ctx.font = F.foot;
+  ctx.fillStyle = "#b3aec9";
+  ctx.textAlign = "center";
+  ctx.fillText("— XKTI · 信科人格测试 —", W / 2, y);
+  return cv;
+}
+
+async function saveResultImage() {
+  const r = lastResult;
+  if (!r) return;
+  const btn = $("btn-save");
+  btn.disabled = true;
+  btn.textContent = "生成中…";
+  try {
+    if (document.fonts && document.fonts.ready) await document.fonts.ready;
+    const badgeImg = await loadImage(r.badge);
+    const poster = buildPoster(r, badgeImg);
+    const holder = $("poster-holder");
+    holder.innerHTML = "";
+    try {
+      const img = document.createElement("img");
+      img.src = poster.toDataURL("image/png");
+      img.alt = "XKTI 结果图";
+      holder.appendChild(img);
+    } catch (e) {
+      // 本地 file:// 打开时浏览器可能禁止导出图片，退化为直接展示画布
+      holder.appendChild(poster);
+    }
+    $("poster-overlay").classList.add("show");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "保存结果图";
+  }
+}
+
+$("btn-save").addEventListener("click", saveResultImage);
+$("poster-overlay").addEventListener("click", e => {
+  if (e.target.id === "poster-overlay") e.target.classList.remove("show");
+});
+</script>
+</body>
+</html>
